@@ -33,6 +33,7 @@ This expands to something like: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmak
 	- `./fsnav.exe`
     - `make install` and `make clean` also works.
 5. Note: The `data` folder has to be next to the executable for it to find the fonts.
+
 ***Has also been set up to use CMake - check CMakeLists.txt*** <br>
 ***Also works with Visual Studio 2017's Open Folder w/ CppProperties.json using CMake.*** <br>
 ***Attempted to set up for Visual Studio code using the .vscode dir but failed. Revisit when VSCode is more documented for MingW*** <br>
