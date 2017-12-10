@@ -305,6 +305,15 @@ void changedir(std::string dirname) {
 	root->layout();    
     glutPostRedisplay();
 }
+
+void changedir(const char *dirname) {
+    root = new Dir;
+    root_dirname = dirname;
+    build_tree(root, root_dirname);
+    root->layout();
+    glutPostRedisplay();
+}
+
 void goUpdir( ) {
 	root = new Dir;
     std::string dirstr(root_dirname);
@@ -314,6 +323,7 @@ void goUpdir( ) {
 	root->layout();    
     glutPostRedisplay();
 }
+
 //Char codes:
 #define BACKSPACE   8
 #define ESCAPEKEY   27
@@ -332,25 +342,19 @@ void goUpdir( ) {
 #define DOWN_ARROW  80
 #define RIGHT_ARROW 77
 
-void changedir(const char *dirname) {
-	root = new Dir;
-	root_dirname = dirname;
-	build_tree(root, root_dirname);
-	root->layout();    
-    glutPostRedisplay();
-}
-
 void keyb(unsigned char key, int x, int y)
 {
 	//char *homedir = ;
 	switch(key) {
     case GLUT_KEY_HOME:	//change to userdir
         changedir((udir+"\\Desktop").c_str());
+        break;
 	case ESCAPEKEY:
 		exit(0);
 		break;
     case GLUT_KEY_PAGE_UP:	//change to up a dir
         goUpdir();
+        break;
     case MINUS:
         cam_dist += 2.0;
         glutPostRedisplay();        

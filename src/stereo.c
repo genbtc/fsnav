@@ -1,7 +1,8 @@
+#include <stdlib.h>
 #include <math.h>
-
 #include <GL/glut.h>
 #include "stereo.h"
+#include "vmath/vmath.h"
 
 static float vfov = 0.0;
 static float aspect = 1.0;
