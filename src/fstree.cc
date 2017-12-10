@@ -5,8 +5,9 @@
 #include <assert.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <pwd.h>
-#include <grp.h>
+//#include <pwd.h>
+//#include <grp.h>
+#include "vmath/vmath.h"
 #include <sys/stat.h>
 #include "fstree.h"
 #include "vis.h"
@@ -299,10 +300,11 @@ int File::get_uid() const
 
 const char *File::get_user() const
 {
-	struct passwd *pw = getpwuid(uid);
-	if(pw) {
-		return pw->pw_name;
-	}
+/* 	struct passwd *pw = getpwuid(uid);
+ * 	if(pw) {
+ * 		return pw->pw_name;
+ * 	}
+ */
 	return "unknown";
 }
 
@@ -318,10 +320,11 @@ int File::get_gid() const
 
 const char *File::get_group() const
 {
-	struct group *gr = getgrgid(gid);
-	if(gr) {
-		return gr->gr_name;
-	}
+/* 	struct group *gr = getgrgid(gid);
+ * 	if(gr) {
+ * 		return gr->gr_name;
+ * 	}
+ */
 	return "unknown";
 }
 
@@ -562,4 +565,3 @@ static Vector2 calc_dir_size(int num_files)
 	float min_dir_sz = params[LP_DIR_SIZE];
 	return Vector2(MAX(xsz, min_dir_sz), MAX(ysz, min_dir_sz));
 }
-

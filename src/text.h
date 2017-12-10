@@ -1,7 +1,7 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-#include <vmath.h>
+#include "vmath/vmath.h"
 
 #ifdef __cplusplus
 extern "C" {

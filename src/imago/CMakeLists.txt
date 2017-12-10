@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.4)
+# by genBTC 2017, project setup on CMake on Windows 64 using MSYS2/MingW64/G++ compilers. Change stuff as needed.
+#project(Imago)
+set( PACKAGE_NAME "Imago" )
+set( PACKAGE_STRING "Imago 1.0" )
+set( PACKAGE_TARNAME "Imago" )
+set( PACKAGE_VERSION "1.0" )
+file(GLOB SOURCE_FILES *.c)
+file(GLOB HEADER_FILES *.h)
+add_library(Imago STATIC ${SOURCE_FILES} ${HEADER_FILES})
+#add_library(Imago SHARED image_jpg.c image_png.c image_ppm.c image_rgbe.c image_tga.c byteorder.c util.c image.c)

@@ -2,3 +2,10 @@
 *.d
 *.swp
 fsnav
+/src/bin/Release/courbd.ttf
+/src/bin/Release/kerkis.afm
+/src/bin/Release/kerkis.pfb
+/src/bin/Release/scope.png
+/src/.codelite/*
+/src/.vs/*
+/src/CMakeBuilds/*

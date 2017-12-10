@@ -1,0 +1,44 @@
+{
+  // See https://go.microsoft.com//fwlink//?linkid=834763 for more information about this file.
+  //This is the main file that is used by CMake/OpenFolder
+  "configurations": [
+    {
+      "name": "MingW64",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "linux-x64", "MINGW64" ],
+      "cmakeExecutable": "${workspaceRoot}\\CMakeBuilds\\${generator}",
+      "buildRoot": "${workspaceRoot}\\CMakeBuilds\\FSNav-${name}",
+      "installRoot": "${workspaceRoot}\\Install\\FSNav",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "CMAKE_CXX_FLAGS",
+          "value": "-ggdb -Og -std=c++1z"
+        },
+        {
+          "name": "CMAKE_CXX_STANDARD",
+          "value": "17"
+        },
+        {
+          "name": "CMAKE_CXX_COMPILER",
+          "value": "c++"
+        },
+        {
+          "name": "CMAKE_MAKE_PROGRAM",
+          "value": "ninja"
+        },
+        {
+          "name": "CMAKE_C_COMPILER",
+          "value": "cc"
+        },
+        {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "C:/Software/msys64/mingw64"
+        }
+      ]
+    }
+  ]
+}

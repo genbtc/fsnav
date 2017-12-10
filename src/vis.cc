@@ -10,7 +10,8 @@
 #include "colorman.h"
 #include "text.h"
 
-static void draw_cube(float sz);
+void draw_cube(float sz);
+void draw_cube(float sz,float height);
 static const char *mode_str(unsigned int mode);
 
 extern unsigned int fonttt, fontrm, fonttt_sm;
@@ -51,7 +52,7 @@ void draw_node(const FSNode *node)
 	glTranslatef(pos.x, pos.y, pos.z);
 	glScalef(sz.x, sz.y, sz.z);
 
-	draw_cube(1.0);
+	draw_cube(1.0,node->get_size());
 
 	glPopMatrix();
 	glPopAttrib();
@@ -63,19 +64,20 @@ void draw_node_text(const FSNode *node)
 	if(name) {
 		Vector3 tpos = node->get_text_pos();
 		float tsize = node->get_text_size();
-
+		float fsize = (node->get_size() /1048576)/2;
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
-		glTranslatef(0, 0, 0.1);
+		glTranslatef(0,fsize, 0.2);
 		glTranslatef(tpos.x, tpos.y + 0.01, tpos.z + get_line_advance() / 2.0);
-		glRotatef(-50, 1, 0, 0);
+		glRotatef(-5, 1, 0, 0);
+		glRotatef(45, 0, 1, 0);
 
 		bind_font(fontrm);
 		set_text_mode(TEXT_MODE_3D);
-		set_text_size(tsize);
+		set_text_size(tsize * 3);   ///3make text bigger
 		set_text_pos(0.5 - get_text_width(name) * 0.5, 0.5);
 
-		glDepthMask(0);
+		glDepthMask(0.5);
 		print_string(name);
 		glDepthMask(1);
 
@@ -108,47 +110,47 @@ void draw_link(const Link *link)
 	glPopAttrib();
 }
 
-static void draw_cube(float sz)
-{
-	float hsz = sz * 0.5f;
-
+void draw_cube(float sz, float height) {
+    sz *= 0.5;
+    height/=1048576;    //show height in mbs's for now
 	glBegin(GL_QUADS);
-	/* far face (-Z) */
-	glNormal3f(0, 0, -1);
-	glTexCoord2f(1, 1);	glVertex3f(hsz, -hsz, -hsz);
-	glTexCoord2f(0, 1);	glVertex3f(-hsz, -hsz, -hsz);
-	glTexCoord2f(0, 0);	glVertex3f(-hsz, hsz, -hsz);
-	glTexCoord2f(1, 0);	glVertex3f(hsz, hsz, -hsz);
 	/* top face (+Y) */
 	glNormal3f(0, 1, 0);
-	glTexCoord2f(0, 1); glVertex3f(-hsz, hsz, hsz);
-	glTexCoord2f(1, 1); glVertex3f(hsz, hsz, hsz);
-	glTexCoord2f(1, 0); glVertex3f(hsz, hsz, -hsz);
-	glTexCoord2f(0, 0); glVertex3f(-hsz, hsz, -hsz);
+	glTexCoord2f(0, 1); glVertex3f(-sz, height+sz, sz);
+	glTexCoord2f(1, 1); glVertex3f(sz, height+sz, sz);
+	glTexCoord2f(1, 0); glVertex3f(sz, height+sz, -sz);
+	glTexCoord2f(0, 0); glVertex3f(-sz, height+sz, -sz);
 	/* bottom face (-Y) */
 	glNormal3f(0, -1, 0);
-	glTexCoord2f(0, 1); glVertex3f(-hsz, -hsz, -hsz);
-	glTexCoord2f(1, 1); glVertex3f(hsz, -hsz, -hsz);
-	glTexCoord2f(1, 0); glVertex3f(hsz, -hsz, hsz);
-	glTexCoord2f(0, 0); glVertex3f(-hsz, -hsz, hsz);
+	glTexCoord2f(0, 1); glVertex3f(-sz, -sz, -sz);
+	glTexCoord2f(1, 1); glVertex3f(sz, -sz, -sz);
+	glTexCoord2f(1, 0); glVertex3f(sz, -sz, sz);
+	glTexCoord2f(0, 0); glVertex3f(-sz, -sz, sz);
 	/* right face (+X) */
 	glNormal3f(1, 0, 0);
-	glTexCoord2f(0, 1); glVertex3f(hsz, -hsz, hsz);
-	glTexCoord2f(1, 1); glVertex3f(hsz, -hsz, -hsz);
-	glTexCoord2f(1, 0); glVertex3f(hsz, hsz, -hsz);
-	glTexCoord2f(0, 0); glVertex3f(hsz, hsz, hsz);
+	glTexCoord2f(0, 1); glVertex3f(sz, -sz, sz);
+	glTexCoord2f(1, 1); glVertex3f(sz, -sz, -sz);
+	glTexCoord2f(1, 0); glVertex3f(sz, height+sz, -sz);
+	glTexCoord2f(0, 0); glVertex3f(sz, height+sz, sz);
 	/* left face (-X) */
 	glNormal3f(-1, 0, 0);
-	glTexCoord2f(0, 1); glVertex3f(-hsz, -hsz, -hsz);
-	glTexCoord2f(1, 1); glVertex3f(-hsz, -hsz, hsz);
-	glTexCoord2f(1, 0); glVertex3f(-hsz, hsz, hsz);
-	glTexCoord2f(0, 0); glVertex3f(-hsz, hsz, -hsz);
+	glTexCoord2f(0, 1); glVertex3f(-sz, -sz, -sz);
+	glTexCoord2f(1, 1); glVertex3f(-sz, -sz, sz);
+	glTexCoord2f(1, 0); glVertex3f(-sz, height+sz, sz);
+	glTexCoord2f(0, 0); glVertex3f(-sz, height+sz, -sz);
 	/* near face (+Z) */
 	glNormal3f(0, 0, 1);
-	glTexCoord2f(0, 1); glVertex3f(-hsz, -hsz, hsz);
-	glTexCoord2f(1, 1); glVertex3f(hsz, -hsz, hsz);
-	glTexCoord2f(1, 0); glVertex3f(hsz, hsz, hsz);
-	glTexCoord2f(0, 0); glVertex3f(-hsz, hsz, hsz);
+	glTexCoord2f(0, 1); glVertex3f(-sz, -sz, sz);
+	glTexCoord2f(1, 1); glVertex3f(sz, -sz, sz);
+	glTexCoord2f(1, 0); glVertex3f(sz, height+sz, sz);
+	glTexCoord2f(0, 0); glVertex3f(-sz, height+sz, sz);
+
+	/* far face (-Z) */
+	glNormal3f(0, 0, -1);
+	glTexCoord2f(1, 1);	glVertex3f(sz, -sz, -sz);
+	glTexCoord2f(0, 1);	glVertex3f(-sz, -sz, -sz);
+	glTexCoord2f(0, 0);	glVertex3f(-sz, height+sz, -sz);
+	glTexCoord2f(1, 0);	glVertex3f(sz, height+sz, -sz);	
 	glEnd();
 }
 

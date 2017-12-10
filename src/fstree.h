@@ -3,7 +3,7 @@
 
 #include <time.h>
 #include <vector>
-#include <vmath.h>
+#include "vmath/vmath.h"
 
 class Dir;
 class FSNode;

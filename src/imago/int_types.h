@@ -13,9 +13,10 @@ BSD license. See COPYING for more details.
 
 #include <stdlib.h>
 
-#if (__STDC_VERSION__ >= 199900) || defined(__GLIBC__) || defined(__MACH__) || defined(HAVE_STDINT_H)
+
+
 #include <stdint.h>
-#elif defined(unix) || defined(__unix__)
+
 #include <sys/types.h>
 #elif defined(_MSC_VER)
 typedef __int8 int8_t;
@@ -61,7 +62,5 @@ typedef unsigned long uint32_t;
 /* NOTE: no reliable way to obtain an int64 if we don't know the
  * compiler, so skip that one for now, leave it undefined.
  */
-
-#endif	/* stdint detection */
 
 #endif	/* TYPES_H_ */

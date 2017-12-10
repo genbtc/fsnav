@@ -1,6 +1,9 @@
+#include <iostream>
+#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include "fstree.h"
+#include <string.h>
+#include <sys/stat.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <GLUT/glut.h>
@@ -13,17 +16,17 @@
 #include "fstree.h"
 #include "text.h"
 #include "vis.h"
-#include "image.h"
+#include "imago/image.h"
 #include "stereo.h"
 
 #ifndef GL_BGRA
 #define GL_BGRA		0x80e1
 #endif
 
-#ifndef PREFIX
-#define PREFIX	"/usr/local"
-#endif
-
+#define TRANSITION_TIME	1.0
+#define PROGRAM_NAME "FSN: Filesystem Visualizer 1.0 - ported by genBTC"
+using namespace std;
+std::string udir(getenv("USERPROFILE"));
 const char *find_data_file(const char *fname);
 void disp();
 void render();
@@ -31,6 +34,7 @@ Ray calc_mouse_ray(int x, int y);
 void reshape(int x, int y);
 void keyb(unsigned char key, int x, int y);
 void keyb_up(unsigned char key, int x, int y);
+void processSpecialKeys(int key, int x, int y);
 void mouse(int bn, int state, int x, int y);
 void motion(int x, int y);
 void passive_motion(int x, int y);
@@ -55,25 +59,21 @@ static bool hover_file_info;
 unsigned int fontrm, fonttt, fonttt_sm;
 unsigned int scope_tex;
 
-static char *root_dirname;
+static const char* root_dirname;
+static const char* data_dirname;
 static int stereo;
 
-int main(int argc, char **argv)
+int glutMainCompose()
 {
-	glutInitWindowSize(800, 600);
-	glutInit(&argc, argv);
+	//create GLUT GL window
+    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | (stereo ? GLUT_STEREO : 0));
+	glutCreateWindow(PROGRAM_NAME);
 
-	if(parse_args(argc, argv) == -1) {
-		return 1;
-	}
-
-	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | (stereo ? GLUT_STEREO : 0));
-	glutCreateWindow("filesystem visualizer");
-
-	glutDisplayFunc(disp);
+ 	glutDisplayFunc(disp);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyb);
 	glutKeyboardUpFunc(keyb_up);
+	glutSpecialFunc(processSpecialKeys);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutPassiveMotionFunc(passive_motion);
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
 
 	set_layout_param(LP_FILE_SIZE, 0.5);
 	set_layout_param(LP_FILE_SPACING, 0.1);
@@ -129,7 +129,19 @@ int main(int argc, char **argv)
 	glEnable(GL_LINE_SMOOTH);
 
 	stereo_focus_dist(4.0);
+	return 0;
+}
 
+int main(int argc, char **argv)
+{
+    fprintf(stderr, "FSNav Starting! Loading OpenGL...\n");
+	glutInitWindowSize(1920, 1080);
+	glutInit(&argc, argv);
+
+	if(parse_args(argc, argv) == -1)
+		return 1;
+	if(glutMainCompose() == 1)
+        return 1;
 	glutMainLoop();
 	return 0;
 }
@@ -138,10 +150,10 @@ const char *find_data_file(const char *fname)
 {
 	static char buf[2048];
 	const char *dirs[] = {
-		PREFIX "/share/fsnav",
 		"/usr/local/share/fsnav",
 		"/usr/share/fsnav",
 		"data",
+		data_dirname,
 		0
 	};
 
@@ -156,17 +168,32 @@ const char *find_data_file(const char *fname)
 	return fname;
 }
 
-#define TRANS_TIME	0.8
-void disp()
-{
-	unsigned int msec = glutGet(GLUT_ELAPSED_TIME);
+void lighting( void) {
+	
+	float light_ambient[] = { 0.53, 0.53, 0.53, 1.0 };
+	float light_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
+	float light_specular[] = { 0.4, 0.4, 0.4, 1.0 };
+	float light_position[] = { 1.0, 1.0, 1.0, 1.0 };
+	/* Set up lighting */
+	glEnable( GL_LIGHTING );
+	glEnable( GL_LIGHT0 );
+	glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
+	glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
+	glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
+	glLightfv( GL_LIGHT0, GL_POSITION, light_position );
+	/* Miscellaneous */
+	glAlphaFunc( GL_GEQUAL, 0.0625 );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	glEnable( GL_CULL_FACE );
+	glShadeModel( GL_FLAT );
+	glEnable( GL_DEPTH_TEST );
+	glDepthFunc( GL_LEQUAL );
+	glEnable( GL_POLYGON_OFFSET_FILL );
+	glPolygonOffset( 1.0, 1.0 );
+	glClearColor( 0.0, 0.0, 0.0, 0.0 );	
+}
 
-	float t = (msec - cam_motion_start) / 1000.0 / TRANS_TIME;
-	if(t > 1.0) {
-		t = 1.0;
-	}
-	Vector3 cam_pos = lerp(cam_from, cam_targ, t);
-
+void drawBuffers() {
 	if(stereo) {
 		glDrawBuffer(GL_BACK_LEFT);
 	}
@@ -175,6 +202,7 @@ void disp()
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+	lighting();
 	stereo_proj_matrix(stereo ? VIEW_LEFT : VIEW_CENTER);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -183,6 +211,12 @@ void disp()
 	glTranslatef(0, 0, -cam_dist);
 	glRotatef(cam_phi, 1, 0, 0);
 	glRotatef(cam_theta, 0, 1, 0);
+	unsigned int msec = glutGet(GLUT_ELAPSED_TIME);
+	float t = (msec - cam_motion_start) / 1000.0 / TRANSITION_TIME;
+	if(t > 1.0) {
+		t = 1.0;
+	}
+	Vector3 cam_pos = lerp(cam_from, cam_targ, t);	
 	glTranslatef(-cam_pos.x, -cam_pos.y, -cam_pos.z);
 
 	render();
@@ -206,7 +240,18 @@ void disp()
 
 		render();
 	}
+}
+void disp()
+{
+	unsigned int msec = glutGet(GLUT_ELAPSED_TIME);
 
+	float t = (msec - cam_motion_start) / 1000.0 / TRANSITION_TIME;
+	if(t > 1.0) {
+		t = 1.0;
+	}
+
+	lighting();	
+	drawBuffers();
 	glutSwapBuffers();
 	assert(glGetError() == GL_NO_ERROR);
 
@@ -218,7 +263,7 @@ void disp()
 void render()
 {
 	float lpos[] = {-0.5, 1, 0.5, 0};
-	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
+	glLightfv(GL_LIGHT1, GL_POSITION, lpos);
 
 	draw_env();
 	root->draw();
@@ -262,34 +307,82 @@ void reshape(int x, int y)
 	xsz = x;
 	ysz = y;
 	glViewport(0, 0, x, y);
-
-	/*glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(50.0, (float)x / (float)y, 0.5, 500.0);*/
-
 	stereo_proj_param(50.0, (float)x / (float)y, 0.5, 500.0);
 }
+
+void changedir(std::string dirname) {
+	root = new Dir;
+    root_dirname = dirname.c_str();
+	build_tree(root, root_dirname);
+	root->layout();    
+    glutPostRedisplay();
+}
+void goUpdir( ) {
+	root = new Dir;
+    std::string dirstr(root_dirname);
+    size_t found = dirstr.find_last_of("/\\");    
+    root_dirname = (dirstr.substr(0,found)).c_str();
+	build_tree(root, root_dirname);
+	root->layout();    
+    glutPostRedisplay();
+}
+//Char codes:
+#define BACKSPACE   8
+#define ESCAPEKEY   27
+#define MINUS 		45
+#define PLUS 		61
+#define SPACEBAR 	' '
 
 void keyb(unsigned char key, int x, int y)
 {
 	switch(key) {
-	case 27:
+	case ESCAPEKEY:
 		exit(0);
-
-	case ' ':
+		break;
+    case MINUS:	//zoom out
+        cam_dist += 1;
+        glutPostRedisplay();        
+        break;
+    case PLUS:	//zoom in
+        cam_dist -= 1;
+        glutPostRedisplay();
+        if(cam_dist < 0) cam_dist = 0;
+        break;
+	case SPACEBAR:	//select item and show info
 		hover_file_info = true;
 		clicked_node = 0;
 		glutPostRedisplay();
 		break;
-
 	default:
 		break;
 	}
 }
+//Scancodes:
+#define ENTER       13  // for this to print "ENTER", 2 key presses are needed
+#define PAGE_UP     73
+#define HOME        71
+#define END         79
+#define PAGE_DOWN   81
+#define UP_ARROW    72
+#define LEFT_ARROW  75
+#define DOWN_ARROW  80
+#define RIGHT_ARROW 77
+void processSpecialKeys(int key, int x, int y) {
 
+	switch(key) {
+    case GLUT_KEY_HOME:	//change to userdir
+        changedir((udir+"\\Desktop").c_str());
+        break;		
+    case GLUT_KEY_PAGE_UP:	//change to up a dir
+        goUpdir();
+        break;
+	default:
+		break;
+	}
+}
 void keyb_up(unsigned char key, int x, int y)
 {
-	if(key == ' ') {
+	if(key == SPACEBAR) {
 		hover_file_info = false;
 		glutPostRedisplay();
 	}
@@ -422,9 +515,13 @@ unsigned int load_texture(const char *fname)
 
 int parse_args(int argc, char **argv)
 {
-	int i;
+	std::string argv_str(argv[0]);
+    std::string base = argv_str.substr(0, argv_str.find_last_of("\\"));
+	base += "\\data";
+	data_dirname = base.c_str();
+	fprintf(stderr,"Running from: %s\n",data_dirname);
 
-	for(i=1; i<argc; i++) {
+	for(int i=1; i<argc; i++) {
 		if(argv[i][0] == '-' && argv[i][2] == 0) {
 			switch(argv[i][1]) {
 			case 's':
@@ -445,7 +542,7 @@ int parse_args(int argc, char **argv)
 	}
 
 	if(!root_dirname) {
-		root_dirname = ".";
+		root_dirname = "C:\\Users\\Default";
 	}
 	return 0;
 }
