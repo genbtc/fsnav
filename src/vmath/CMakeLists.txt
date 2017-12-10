@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 3.4)
-# by genBTC 2017, project setup on CMake on Windows 64 using MSYS2/MingW64/G++ compilers. Change stuff as needed.
-#project(VMath)
 set( PACKAGE_NAME "VMath" )
 set( PACKAGE_STRING "VMath 3.2" )
 set( PACKAGE_TARNAME "VMath" )
 set( PACKAGE_VERSION "3.2" )
-file(GLOB SOURCE_FILES *.cc)
-file(GLOB HEADER_FILES *.h)
-add_library(VMath STATIC ${SOURCE_FILES} ${HEADER_FILES})
-#add_library(VMath SHARED vector.cc matrix.cc quat.cc ray.cc)
+include_directories(${CMAKE_SOURCE_DIR})
+add_library(VMath STATIC vector.cc matrix.cc quat.cc ray.cc)

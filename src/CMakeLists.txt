@@ -15,12 +15,13 @@ set(MAKEFLAGS "-j${NumCPUS}")
 include(GNUInstallDirs)
 # need GLUT (Freeglut)
 find_package(GLUT REQUIRED)
+# need OpenGL (auto)
+find_package(OpenGL REQUIRED)
 find_package(Freetype REQUIRED)
-#needed to find ft2build.h
+#needed to find ft2build.h in the freetype subdirectory
 include_directories(${FREETYPE_INCLUDE_DIRS})
 find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
-find_package(OpenGL REQUIRED)
 #Set Link libraries (Auto)
 set(LIBRARIES_FROM_REFERENCES "${GLUT_LIBRARIES};${OPENGL_gl_LIBRARY};${OPENGL_glu_LIBRARY};${FREETYPE_LIBRARIES};${JPEG_LIBRARIES};${PNG_LIBRARIES};${ZLIB_LIBRARIES}")
 #Set Link Libraries (Manually)
@@ -37,3 +38,4 @@ else()
 endif(WIN32)
 #Make Exe, go!
 target_link_libraries(FSNav VMath Imago ${LIBRARIES_FROM_REFERENCES})
+#Need to Copy the Data folder to the output dir.
