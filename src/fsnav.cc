@@ -34,7 +34,6 @@ Ray calc_mouse_ray(int x, int y);
 void reshape(int x, int y);
 void keyb(unsigned char key, int x, int y);
 void keyb_up(unsigned char key, int x, int y);
-void processSpecialKeys(int key, int x, int y);
 void mouse(int bn, int state, int x, int y);
 void motion(int x, int y);
 void passive_motion(int x, int y);
@@ -42,8 +41,8 @@ void double_click(int x, int y);
 unsigned int load_texture(const char *fname);
 int parse_args(int argc, char **argv);
 
-static float cam_theta = 0, cam_phi = 25, cam_dist = 5;
-static float cam_y = 0;
+static float cam_theta = 25, cam_phi = 25, cam_dist = 25;
+static float cam_y = 25;
 static Vector3 cam_from, cam_targ;
 static unsigned int cam_motion_start;
 
@@ -65,23 +64,22 @@ static int stereo;
 
 int glutMainCompose()
 {
-	//create GLUT GL window
-    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | (stereo ? GLUT_STEREO : 0));
+    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_MULTISAMPLE | GLUT_DOUBLE | (stereo ? GLUT_STEREO : 0));
 	glutCreateWindow(PROGRAM_NAME);
 
- 	glutDisplayFunc(disp);
+	glutDisplayFunc(disp);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyb);
 	glutKeyboardUpFunc(keyb_up);
-	glutSpecialFunc(processSpecialKeys);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutPassiveMotionFunc(passive_motion);
 
+	glEnable(GLUT_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT1);
+	glEnable(GL_LIGHT0);
 
 	set_layout_param(LP_FILE_SIZE, 0.5);
 	set_layout_param(LP_FILE_SPACING, 0.1);
@@ -98,37 +96,67 @@ int glutMainCompose()
 	}
 	root->layout();
 
-	if(!(fontrm = create_font(find_data_file("kerkis.pfb"), 32))) {
+	if(!((fontrm = create_font(find_data_file("kerkis.pfb"), 32)))) {
 		return 1;
 	}
 	bind_font(fontrm);
 	set_text_color(0.95, 0.9, 0.8, 1.0);
 
-	if(!(fonttt = create_font(find_data_file("courbd.ttf"), 16))) {
+	if(!((fonttt = create_font(find_data_file("courbd.ttf"), 16)))) {
 		return 1;
 	}
 	bind_font(fonttt);
 	set_text_color(1.0, 1.0, 1.0, 1.0);
 
-	if(!(fonttt_sm = create_font(find_data_file("courbd.ttf"), 14))) {
+	if(!((fonttt_sm = create_font(find_data_file("courbd.ttf"), 14)))) {
 		return 1;
 	}
 	bind_font(fonttt_sm);
 	set_text_color(1.0, 1.0, 1.0, 1.0);
 
-	unsigned int font_texid = get_font_texture();
+    const unsigned int font_texid = get_font_texture();
 	glBindTexture(GL_TEXTURE_2D, font_texid);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	if(!(scope_tex = load_texture(find_data_file("scope.png")))) {
+	if(!((scope_tex = load_texture(find_data_file("scope.png"))))) {
 		return 1;
 	}
 
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_LINE_SMOOTH);
 
-	stereo_focus_dist(4.0);
+	stereo_focus_dist(25.0);
+	return 0;
+}
+
+int parse_args(int argc, char **argv)
+{
+	int i;
+
+	for(i=1; i<argc; i++) {
+		if(argv[i][0] == '-' && argv[i][2] == 0) {
+			switch(argv[i][1]) {
+			case 's':
+				stereo = !stereo;
+				break;
+
+			default:
+				fprintf(stderr, "invalid option: %s\n", argv[i]);
+				return -1;
+			}
+		} else {
+			if(root_dirname) {
+				fprintf(stderr, "unexpected argument: %s\n", argv[i]);
+				return -1;
+			}
+			root_dirname = argv[i];
+		}
+	}
+
+	if(!root_dirname) {
+		root_dirname = "C:/Users/Default";
+	}
 	return 0;
 }
 
@@ -148,52 +176,29 @@ int main(int argc, char **argv)
 
 const char *find_data_file(const char *fname)
 {
-	static char buf[2048];
-	const char *dirs[] = {
-		"/usr/local/share/fsnav",
-		"/usr/share/fsnav",
-		"data",
-		data_dirname,
-		0
-	};
+ 	static char buf[2048];
+	char *cwd = getcwd(0, 0);
+	FILE *fp;
 
-	for(int i=0; dirs[i]; i++) {
-		FILE *fp;
-		sprintf(buf, "%s/%s", dirs[i], fname);
-		if((fp = fopen(buf, "rb"))) {
-			fclose(fp);
-			return buf;
-		}
+	sprintf(buf, "%s/data/%s", cwd, fname);
+	delete cwd;
+	if((fp = fopen(buf, "rb"))) {
+		fclose(fp);
+		return buf;
 	}
 	return fname;
 }
 
-void lighting( void) {
-	
-	float light_ambient[] = { 0.53, 0.53, 0.53, 1.0 };
-	float light_diffuse[] = { 0.5, 0.5, 0.5, 1.0 };
-	float light_specular[] = { 0.4, 0.4, 0.4, 1.0 };
-	float light_position[] = { 1.0, 1.0, 1.0, 1.0 };
-	/* Set up lighting */
-	glEnable( GL_LIGHTING );
-	glEnable( GL_LIGHT0 );
-	glLightfv( GL_LIGHT0, GL_AMBIENT, light_ambient );
-	glLightfv( GL_LIGHT0, GL_DIFFUSE, light_diffuse );
-	glLightfv( GL_LIGHT0, GL_SPECULAR, light_specular );
-	glLightfv( GL_LIGHT0, GL_POSITION, light_position );
-	/* Miscellaneous */
-	glAlphaFunc( GL_GEQUAL, 0.0625 );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	glEnable( GL_CULL_FACE );
-	glShadeModel( GL_FLAT );
-	glEnable( GL_DEPTH_TEST );
-	glDepthFunc( GL_LEQUAL );
-	glEnable( GL_POLYGON_OFFSET_FILL );
-	glPolygonOffset( 1.0, 1.0 );
-	glClearColor( 0.0, 0.0, 0.0, 0.0 );	
-}
+void disp()
+{
+	unsigned int msec = glutGet(GLUT_ELAPSED_TIME);
 
-void drawBuffers() {
+	float t = (msec - cam_motion_start) / 1000.0 / TRANSITION_TIME;
+	if(t > 1.0) {
+		t = 1.0;
+	}
+	Vector3 cam_pos = lerp(cam_from, cam_targ, t);
+
 	if(stereo) {
 		glDrawBuffer(GL_BACK_LEFT);
 	}
@@ -202,7 +207,6 @@ void drawBuffers() {
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	lighting();
 	stereo_proj_matrix(stereo ? VIEW_LEFT : VIEW_CENTER);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -211,12 +215,6 @@ void drawBuffers() {
 	glTranslatef(0, 0, -cam_dist);
 	glRotatef(cam_phi, 1, 0, 0);
 	glRotatef(cam_theta, 0, 1, 0);
-	unsigned int msec = glutGet(GLUT_ELAPSED_TIME);
-	float t = (msec - cam_motion_start) / 1000.0 / TRANSITION_TIME;
-	if(t > 1.0) {
-		t = 1.0;
-	}
-	Vector3 cam_pos = lerp(cam_from, cam_targ, t);	
 	glTranslatef(-cam_pos.x, -cam_pos.y, -cam_pos.z);
 
 	render();
@@ -240,18 +238,7 @@ void drawBuffers() {
 
 		render();
 	}
-}
-void disp()
-{
-	unsigned int msec = glutGet(GLUT_ELAPSED_TIME);
 
-	float t = (msec - cam_motion_start) / 1000.0 / TRANSITION_TIME;
-	if(t > 1.0) {
-		t = 1.0;
-	}
-
-	lighting();	
-	drawBuffers();
 	glutSwapBuffers();
 	assert(glGetError() == GL_NO_ERROR);
 
@@ -263,7 +250,7 @@ void disp()
 void render()
 {
 	float lpos[] = {-0.5, 1, 0.5, 0};
-	glLightfv(GL_LIGHT1, GL_POSITION, lpos);
+	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
 
 	draw_env();
 	root->draw();
@@ -307,6 +294,7 @@ void reshape(int x, int y)
 	xsz = x;
 	ysz = y;
 	glViewport(0, 0, x, y);
+
 	stereo_proj_param(50.0, (float)x / (float)y, 0.5, 500.0);
 }
 
@@ -329,34 +317,10 @@ void goUpdir( ) {
 //Char codes:
 #define BACKSPACE   8
 #define ESCAPEKEY   27
-#define MINUS 		45
-#define PLUS 		61
+#define MINUS 45
+#define PLUS 61
 #define SPACEBAR 	' '
 
-void keyb(unsigned char key, int x, int y)
-{
-	switch(key) {
-	case ESCAPEKEY:
-		exit(0);
-		break;
-    case MINUS:	//zoom out
-        cam_dist += 1;
-        glutPostRedisplay();        
-        break;
-    case PLUS:	//zoom in
-        cam_dist -= 1;
-        glutPostRedisplay();
-        if(cam_dist < 0) cam_dist = 0;
-        break;
-	case SPACEBAR:	//select item and show info
-		hover_file_info = true;
-		clicked_node = 0;
-		glutPostRedisplay();
-		break;
-	default:
-		break;
-	}
-}
 //Scancodes:
 #define ENTER       13  // for this to print "ENTER", 2 key presses are needed
 #define PAGE_UP     73
@@ -367,19 +331,52 @@ void keyb(unsigned char key, int x, int y)
 #define LEFT_ARROW  75
 #define DOWN_ARROW  80
 #define RIGHT_ARROW 77
-void processSpecialKeys(int key, int x, int y) {
 
+void changedir(const char *dirname) {
+	root = new Dir;
+	root_dirname = dirname;
+	build_tree(root, root_dirname);
+	root->layout();    
+    glutPostRedisplay();
+}
+
+void keyb(unsigned char key, int x, int y)
+{
+	//char *homedir = ;
 	switch(key) {
     case GLUT_KEY_HOME:	//change to userdir
         changedir((udir+"\\Desktop").c_str());
-        break;		
+	case ESCAPEKEY:
+		exit(0);
+		break;
     case GLUT_KEY_PAGE_UP:	//change to up a dir
         goUpdir();
+    case MINUS:
+        cam_dist += 2.0;
+        glutPostRedisplay();        
         break;
+    case PLUS:
+        cam_dist -= 2.0;
+        glutPostRedisplay();
+        if(cam_dist < 0) cam_dist = 0;
+        break;
+    case BACKSPACE:
+        changedir("C:/Users/Default");
+        break;
+    case PAGE_UP:
+        changedir("");
+        break;
+	case ' ':
+		hover_file_info = true;
+		clicked_node = 0;
+		glutPostRedisplay();
+		break;
+
 	default:
 		break;
 	}
 }
+
 void keyb_up(unsigned char key, int x, int y)
 {
 	if(key == SPACEBAR) {
@@ -394,6 +391,7 @@ static int bnstate[16];
 static int prev_x = -1, prev_y;
 void mouse(int bn, int state, int x, int y)
 {
+    const auto specialKey = glutGetModifiers();
 	static unsigned int prev_left_click;
 	static int prev_left_x, prev_left_y;
 
@@ -415,11 +413,15 @@ void mouse(int bn, int state, int x, int y)
 		}
 
 		if(bn == 3) {
-			cam_dist -= 0.5;
+			cam_dist -= 4;
+			if (specialKey == GLUT_ACTIVE_SHIFT)
+				cam_dist -= 6;
 			glutPostRedisplay();
 			if(cam_dist < 0) cam_dist = 0;
 		} else if(bn == 4) {
-			cam_dist += 0.5;
+			if (specialKey == GLUT_ACTIVE_SHIFT)
+				cam_dist += 6;
+			cam_dist += 4;
 			glutPostRedisplay();
 		} else {
 			prev_x = x;
@@ -496,7 +498,7 @@ unsigned int load_texture(const char *fname)
 	int width, height;
 	unsigned int tex;
 
-	if(!(img = load_image(fname, &width, &height))) {
+	if(!((img = load_image(fname, &width, &height)))) {
 		fprintf(stderr, "failed to load image: %s\n", fname);
 		return 0;
 	}
@@ -511,38 +513,4 @@ unsigned int load_texture(const char *fname)
 
 	free_image(img);
 	return tex;
-}
-
-int parse_args(int argc, char **argv)
-{
-	std::string argv_str(argv[0]);
-    std::string base = argv_str.substr(0, argv_str.find_last_of("\\"));
-	base += "\\data";
-	data_dirname = base.c_str();
-	fprintf(stderr,"Running from: %s\n",data_dirname);
-
-	for(int i=1; i<argc; i++) {
-		if(argv[i][0] == '-' && argv[i][2] == 0) {
-			switch(argv[i][1]) {
-			case 's':
-				stereo = !stereo;
-				break;
-
-			default:
-				fprintf(stderr, "invalid option: %s\n", argv[i]);
-				return -1;
-			}
-		} else {
-			if(root_dirname) {
-				fprintf(stderr, "unexpected argument: %s\n", argv[i]);
-				return -1;
-			}
-			root_dirname = argv[i];
-		}
-	}
-
-	if(!root_dirname) {
-		root_dirname = "C:\\Users\\Default";
-	}
-	return 0;
 }

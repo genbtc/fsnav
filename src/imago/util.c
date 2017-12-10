@@ -14,8 +14,9 @@ BSD license. See COPYING for more details.
 
 void conv_32bpp_to_float(uint32_t *src, float *dst, int xsz, int ysz)
 {
-	int i, sz = xsz * ysz;
-	for(i=0; i<sz; i++) {
+	int i;
+    const int sz = xsz * ysz;
+    for(i=0; i<sz; i++) {
 		dst[i * 4] = UNP_RED32(src[i]) / 255.0f;
 		dst[i * 4 + 1] = UNP_GREEN32(src[i]) / 255.0f;
 		dst[i * 4 + 2] = UNP_BLUE32(src[i]) / 255.0f;
@@ -25,8 +26,9 @@ void conv_32bpp_to_float(uint32_t *src, float *dst, int xsz, int ysz)
 
 void conv_float_to_32bpp(float *src, uint32_t *dst, int xsz, int ysz)
 {
-	int i, sz = xsz * ysz;
-	for(i=0; i<sz; i++) {
+	int i;
+    const int sz = xsz * ysz;
+    for(i=0; i<sz; i++) {
 		int r = src[i * 4] * 255.0f;
 		int g = src[i * 4 + 1] * 255.0f;
 		int b = src[i * 4 + 2] * 255.0f;

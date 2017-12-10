@@ -10,6 +10,9 @@
 #include "colorman.h"
 #include "text.h"
 
+#define NODE_TEXT_ROTATION_ANGLE_H 0
+#define NODE_TEXT_ROTATION_ANGLE_V -5
+
 void draw_cube(float sz);
 void draw_cube(float sz,float height);
 static const char *mode_str(unsigned int mode);
@@ -69,15 +72,15 @@ void draw_node_text(const FSNode *node)
 		glPushMatrix();
 		glTranslatef(0,fsize, 0.2);
 		glTranslatef(tpos.x, tpos.y + 0.01, tpos.z + get_line_advance() / 2.0);
-		glRotatef(-5, 1, 0, 0);
-		glRotatef(45, 0, 1, 0);
+		glRotatef(NODE_TEXT_ROTATION_ANGLE_V, 1, 0, 0);
+		glRotatef(NODE_TEXT_ROTATION_ANGLE_H, 0, 1, 0);
 
 		bind_font(fontrm);
 		set_text_mode(TEXT_MODE_3D);
 		set_text_size(tsize * 3);   ///3make text bigger
 		set_text_pos(0.5 - get_text_width(name) * 0.5, 0.5);
 
-		glDepthMask(0.5);
+		glDepthMask(0);
 		print_string(name);
 		glDepthMask(1);
 
@@ -95,7 +98,7 @@ void draw_link(const Link *link)
 	glDisable(GL_LIGHTING);
 	glEnable(GL_BLEND);
 	glLineWidth(2.0);//link->selected ? 2.0 : 1.0);
-
+	//TODO: introduce variables for line-width
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef(0.0, 0.0, 0.0);
@@ -191,7 +194,7 @@ void draw_file_stats(const File *file, float mx, float my)
 	float y = 1.0 - 2.0 * my;
 
 	glTranslatef(x + 0.28, y + 0.12, 0);
-	glScalef(0.4, 0.25, 1);
+	glScalef(0.5, 0.25, 1);
 
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_LIGHTING);

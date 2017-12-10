@@ -53,8 +53,7 @@ struct font {
     int ptsize;
 };
 
-static void blit_font_glyph(struct font *fnt, int x, int y, FT_GlyphSlot glyph, unsigned int *img,
-                            int xsz, int ysz);
+static void blit_font_glyph(struct font *fnt, int x, int y, FT_GlyphSlot glyph, unsigned int *img, int xsz, int ysz);
 static void clean_up(void);
 
 static FT_Library ft;
@@ -301,49 +300,6 @@ vec4_t get_text_color(void)
     return *(vec4_t*)&text_color;
 }
 
-/*
-static void im_overlay(vec2_t v1, vec2_t v2, color_t col, unsigned int tex)
-{
-    float l = v1.x * 2.0f - 1.0f;
-    float r = v2.x * 2.0f - 1.0f;
-    float u = -v1.y * 2.0f + 1.0f;
-    float d = -v2.y * 2.0f + 1.0f;
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
-
-    glBegin(GL_QUADS);
-    glColor4f(col.r, col.g, col.b, col.a);
-    glTexCoord2f(0, 0);
-    glVertex2f(l, u);
-    glTexCoord2f(1, 0);
-    glVertex2f(r, u);
-    glTexCoord2f(1, 1);
-    glVertex2f(r, d);
-    glTexCoord2f(0, 1);
-    glVertex2f(l, d);
-    glEnd();
-
-    glEnable(GL_LIGHTING);
-    glEnable(GL_DEPTH_TEST);
-
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-}
-*/
-
 /* this function contains the preamble of all block text drawing functions */
 static void pre_draw()
 {
@@ -461,8 +417,7 @@ void print_string_lines(const char **str, int lines)
     post_draw();
 }
 
-static void blit_font_glyph(struct font *fnt, int x, int y, FT_GlyphSlot glyph, unsigned int *img,
-                            int xsz, int ysz)
+static void blit_font_glyph(struct font *fnt, int x, int y, FT_GlyphSlot glyph, unsigned int *img, int xsz, int ysz)
 {
     int i, j;
     unsigned char *dest;

@@ -57,8 +57,7 @@ void *load_png(FILE *fp, int *xsz, int *ysz)
 
     png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_BGR, 0);
 
-    png_get_IHDR(png_ptr, info_ptr, &img_x, &img_y, &channel_bits, &color_type, &ilace_type,
-                 &compression, &filtering);
+	png_get_IHDR(png_ptr, info_ptr, &img_x, &img_y, &channel_bits, &color_type, &ilace_type, &compression, &filtering);
     *xsz = img_x;
     *ysz = img_y;
     pixels = malloc(*xsz * *ysz * sizeof(uint32_t));
@@ -68,7 +67,8 @@ void *load_png(FILE *fp, int *xsz, int *ysz)
     for(i=0; i<*ysz; i++) {
 
         switch(color_type) {
-        case PNG_COLOR_TYPE_RGB: {
+		case PNG_COLOR_TYPE_RGB:
+			{
             int j;
             unsigned char *ptr = (unsigned char*)lineptr[i];
             for(j=0; j<*xsz; j++) {
@@ -98,7 +98,7 @@ void *load_png(FILE *fp, int *xsz, int *ysz)
     if(get_image_option(IMG_OPT_FLOAT)) {
         float *fpix;
 
-        if(!(fpix = malloc(img_x * img_y * 4 * sizeof *fpix))) {
+		if(!((fpix = malloc(img_x * img_y * 4 * sizeof *fpix)))) {
             free(pixels);
             return 0;
         }
@@ -119,9 +119,9 @@ int save_png(FILE *fp, void *pixels, int xsz, int ysz)
     int i, j, coltype;
     uint32_t *pixptr;
     unsigned char **rows;
-    int save_alpha = get_image_option(IMG_OPT_ALPHA);
-    int save_invert = get_image_option(IMG_OPT_INVERT);
-    int src_fmt_float = get_image_option(IMG_OPT_FLOAT);
+	const int save_alpha = get_image_option(IMG_OPT_ALPHA);
+	const int save_invert = get_image_option(IMG_OPT_INVERT);
+	const int src_fmt_float = get_image_option(IMG_OPT_FLOAT);
 
     if(src_fmt_float) {
         void *rgba32 = malloc(xsz * ysz * sizeof(uint32_t));
@@ -134,14 +134,14 @@ int save_png(FILE *fp, void *pixels, int xsz, int ysz)
     txt.text = "libimago";
     txt.text_length = 0;
 
-    if(!(png = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0))) {
+	if(!((png = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0)))) {
         if(src_fmt_float) {
             free(pixels);
         }
         return -1;
     }
 
-    if(!(info = png_create_info_struct(png))) {
+	if(!((info = png_create_info_struct(png)))) {
         png_destroy_write_struct(&png, 0);
         if(src_fmt_float) {
             free(pixels);
@@ -160,11 +160,10 @@ int save_png(FILE *fp, void *pixels, int xsz, int ysz)
     png_init_io(png, fp);
 
     coltype = save_alpha ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB;
-    png_set_IHDR(png, info, xsz, ysz, 8, coltype, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
-                 PNG_FILTER_TYPE_DEFAULT);
+	png_set_IHDR(png, info, xsz, ysz, 8, coltype, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     png_set_text(png, info, &txt, 1);
 
-    if(!(rows = malloc(ysz * sizeof *rows))) {
+	if(!((rows = malloc(ysz * sizeof *rows)))) {
         png_destroy_write_struct(&png, &info);
         if(src_fmt_float) {
             free(pixels);
@@ -181,8 +180,7 @@ int save_png(FILE *fp, void *pixels, int xsz, int ysz)
                 rows[i][j * 3 + 1] = UNP_GREEN32(pixptr[j]);
                 rows[i][j * 3 + 2] = UNP_RED32(pixptr[j]);
             }
-        }
-        else {
+		} else {
             /* TODO BUG, make sure the user-settable shifts are obeyed */
             rows[i] = (unsigned char*)pixptr;
         }

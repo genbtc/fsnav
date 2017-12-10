@@ -5,8 +5,6 @@
 #include <assert.h>
 #include <unistd.h>
 #include <dirent.h>
-//#include <pwd.h>
-//#include <grp.h>
 #include "vmath/vmath.h"
 #include <sys/stat.h>
 #include "fstree.h"
@@ -49,7 +47,7 @@ bool build_tree(Dir *tree, const char *dirname)
 
 	tree->set_name(dirname);
 
-	if(!(dir = opendir(dirname))) {
+	if(!((dir = opendir(dirname)))) {
 		fprintf(stderr, "failed to open dir: %s: %s\n", dirname, strerror(errno));
 		return false;
 	}
@@ -98,7 +96,6 @@ bool build_tree(Dir *tree, const char *dirname)
 }
 
 
-
 // --- link between directories ---
 
 Link::Link(Dir *from, Dir *to)
@@ -119,71 +116,6 @@ bool Link::intersect(const Ray &ray, float *pt) const
 }
 
 // --- abstract base class FSNode ---
-
-FSNode::FSNode()
-{
-	name = 0;
-	size = 0;
-	parent = 0;
-	selected = false;
-}
-
-FSNode::~FSNode()
-{
-	delete [] name;
-}
-
-void FSNode::set_name(const char *name)
-{
-	delete [] this->name;
-	this->name = new char[strlen(name) + 1];
-	strcpy(this->name, name);
-}
-
-const char *FSNode::get_name() const
-{
-	return name;
-}
-
-void FSNode::set_size(size_t sz)
-{
-	size = sz;
-}
-
-size_t FSNode::get_size() const
-{
-	return size;
-}
-
-void FSNode::set_vis_pos(const Vector3 &vpos)
-{
-	vis_pos = vpos;
-}
-
-const Vector3 &FSNode::get_vis_pos() const
-{
-	return vis_pos;
-}
-
-void FSNode::set_vis_size(const Vector3 &vsize)
-{
-	vis_size = vsize;
-}
-
-const Vector3 &FSNode::get_vis_size() const
-{
-	return vis_size;
-}
-
-void FSNode::set_parent(FSNode *p)
-{
-	parent = p;
-}
-
-const FSNode *FSNode::get_parent() const
-{
-	return parent;
-}
 
 void FSNode::draw() const
 {
@@ -228,7 +160,7 @@ bool FSNode::intersect(const Ray &ray, float *pt) const
 		// intersection point
 		Vector3 pos = ray.origin + ray.dir * t;
 
-		int bit = 1 << i;
+	    const int bit = 1 << i;
 		if((bit & (NEG_Z | POS_Z | POS_Y | NEG_Y)) && (pos.x < min.x || pos.x >= max.x)) {
 			continue;
 		}
@@ -254,151 +186,6 @@ bool FSNode::intersect(const Ray &ray, float *pt) const
 		*pt = nearest_t;
 	}
 	return true;
-}
-
-// --- File class ---
-
-File::File()
-{
-	num_links = 0;
-	mode = 0;
-	uid = gid = 0;
-	time[0] = time[1] = time[2] = 0;
-}
-
-File::~File() {}
-
-void File::set_links(int nlinks)
-{
-	num_links = nlinks;
-}
-
-int File::get_links() const
-{
-	return num_links;
-}
-
-void File::set_mode(int mode)
-{
-	this->mode = mode;
-}
-
-int File::get_mode() const
-{
-	return mode;
-}
-
-void File::set_uid(int uid)
-{
-	this->uid = uid;
-}
-
-int File::get_uid() const
-{
-	return uid;
-}
-
-const char *File::get_user() const
-{
-/* 	struct passwd *pw = getpwuid(uid);
- * 	if(pw) {
- * 		return pw->pw_name;
- * 	}
- */
-	return "unknown";
-}
-
-void File::set_gid(int gid)
-{
-	this->gid = gid;
-}
-
-int File::get_gid() const
-{
-	return gid;
-}
-
-const char *File::get_group() const
-{
-/* 	struct group *gr = getgrgid(gid);
- * 	if(gr) {
- * 		return gr->gr_name;
- * 	}
- */
-	return "unknown";
-}
-
-void File::set_time(int which, time_t t)
-{
-	time[which] = t;
-}
-
-time_t File::get_time(int which) const
-{
-	return time[which];
-}
-
-Vector3 File::get_text_pos() const
-{
-	return vis_pos + Vector3(0, vis_size.y, 0);
-}
-
-float File::get_text_size() const
-{
-	return 1.0;
-}
-
-// --- directories ---
-
-Dir::Dir()
-{
-}
-
-Dir::~Dir() {}
-
-void Dir::add_subdir(Dir *dir)
-{
-	subdirs.push_back(dir);
-	dir->set_parent(this);
-
-	Link link(this, dir);
-	links.push_back(link);
-}
-
-void Dir::add_file(File *file)
-{
-	files.push_back(file);
-	file->set_parent(this);
-}
-
-Dir *Dir::get_subdirs() const
-{
-	return subdirs.empty() ? 0 : (Dir*)&subdirs[0];
-}
-
-int Dir::get_num_subdirs() const
-{
-	return (int)subdirs.size();
-}
-
-File *Dir::get_files() const
-{
-	return files.empty() ? 0 : (File*)&files[0];
-}
-
-int Dir::get_num_files() const
-{
-	return (int)files.size();
-}
-
-Link *Dir::get_links() const
-{
-	return links.empty() ? 0 : (Link*)&links[0];
-}
-
-int Dir::get_num_links() const
-{
-	return (int)links.size();
 }
 
 void Dir::layout()
@@ -492,6 +279,7 @@ void Dir::draw() const
 	draw_node_text(this);
 }
 
+//Algorithms/Magic Numbers to get/set the Text size/pos
 Vector3 Dir::get_text_pos() const
 {
 	float zoffs = vis_size.z / 2.0 + get_line_advance() * get_text_size();
@@ -501,6 +289,16 @@ Vector3 Dir::get_text_pos() const
 float Dir::get_text_size() const
 {
 	return 5.0;
+}
+
+Vector3 File::get_text_pos() const
+{
+	return vis_pos + Vector3(0, vis_size.y, 0);
+}
+
+float File::get_text_size() const
+{
+	return 1.0;
 }
 
 FSNode *Dir::find_intersection(const Ray &ray, float *pt)
@@ -556,8 +354,8 @@ bool Dir::pick(const Ray &ray)
 
 static Vector2 calc_dir_size(int num_files)
 {
-	int files_x = (int)ceil(sqrt((float)num_files));
-	int files_y = (int)ceil((float)num_files / (float)files_x);
+    const int files_x = (int)ceil(sqrt((float)num_files));
+    const int files_y = (int)ceil((float)num_files / (float)files_x);
 
 	float xsz = files_x * params[LP_FILE_SIZE] + (files_x + 1) * params[LP_FILE_SPACING];
 	float ysz = files_y * params[LP_FILE_SIZE] + (files_y + 1) * params[LP_FILE_SPACING];

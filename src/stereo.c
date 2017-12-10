@@ -3,7 +3,7 @@
 #include <GL/glut.h>
 #include "stereo.h"
 
-static float vfov = 45.0;
+static float vfov = 0.0;
 static float aspect = 1.0;
 static float neara = 0.5;
 static float fara = 500.0;
