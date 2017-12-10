@@ -1,8 +1,26 @@
-#ifndef VMATH_RAY_H_
-#define VMATH_RAY_H_
+/*
+libvmath - a vector math library
+Copyright (C) 2004-2015 John Tsiombikas <nuclear@member.fsf.org>
 
-#include "vector.h"
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef LIBVMATH_RAY_H_
+#define LIBVMATH_RAY_H_
+
 #include "matrix.h"
+#include "vector.h"
 
 typedef struct {
 	vec3_t origin, dir;
@@ -18,21 +36,13 @@ ray_t ray_transform(ray_t r, mat4_t m);
 #ifdef __cplusplus
 }	/* __cplusplus */
 
-#include <stack>
-
 class Ray {
 private:
-	std::stack<scalar_t> ior_stack;
+	void (*data_destructor)(void*);
 
 public:
-	/* enviornmental index of refraction, normally 1.0 */
-	static scalar_t env_ior;
-	
 	Vector3 origin, dir;
-	scalar_t energy;
-	int iter;
-	scalar_t ior;
-	long time;
+	void *data; // each ray may carry additional data
 
 	Ray();
 	Ray(const Vector3 &origin, const Vector3 &dir);
@@ -40,11 +50,13 @@ public:
 	void transform(const Matrix4x4 &xform);
 	Ray transformed(const Matrix4x4 &xform) const;
 
-	void enter(scalar_t new_ior);
-	void leave();
+	void set_data(void *data, void (*data_destr_func)(void*) = 0);
 };
+
+inline Ray reflect(const Ray &inray, const Vector3 &norm);
+inline Ray refract(const Ray &inray, const Vector3 &norm, scalar_t ior, scalar_t ray_mag = -1.0);
 #endif	/* __cplusplus */
 
 #include "ray.inl"
 
-#endif	/* VMATH_RAY_H_ */
+#endif	/* LIBVMATH_RAY_H_ */

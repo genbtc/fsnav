@@ -1,5 +1,23 @@
-#ifndef VMATH_QUATERNION_H_
-#define VMATH_QUATERNION_H_
+/*
+libvmath - a vector math library
+Copyright (C) 2004-2015 John Tsiombikas <nuclear@member.fsf.org>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef LIBVMATH_QUATERNION_H_
+#define LIBVMATH_QUATERNION_H_
 
 #include <stdio.h>
 #include "vmath_types.h"
@@ -42,8 +60,6 @@ quat_t quat_slerp(quat_t q1, quat_t q2, scalar_t t);
 #ifdef __cplusplus
 }	/* extern "C" */
 
-#include <iostream>
-
 /* Quaternion */
 class Quaternion {
 public:
@@ -60,7 +76,7 @@ public:
 	Quaternion operator -(const Quaternion &quat) const;
 	Quaternion operator -() const;
 	Quaternion operator *(const Quaternion &quat) const;
-	
+
 	void operator +=(const Quaternion &quat);
 	void operator -=(const Quaternion &quat);
 	void operator *=(const Quaternion &quat);
@@ -71,7 +87,7 @@ public:
 
 	scalar_t length() const;
 	scalar_t length_sq() const;
-	
+
 	void normalize();
 	Quaternion normalized() const;
 
@@ -86,16 +102,13 @@ public:
 	void rotate(const Quaternion &q);
 
 	Matrix3x3 get_rotation_matrix() const;
-	
-	friend Quaternion slerp(const Quaternion &q1, const Quaternion &q2, scalar_t t);
-	
-	friend std::ostream &operator <<(std::ostream &out, const Quaternion &q);
 };
 
 Quaternion slerp(const Quaternion &q1, const Quaternion &q2, scalar_t t);
 inline Quaternion lerp(const Quaternion &q1, const Quaternion &q2, scalar_t t);
+
 #endif	/* __cplusplus */
 
 #include "quat.inl"
 
-#endif	/* VMATH_QUATERNION_H_ */
+#endif	/* LIBVMATH_QUATERNION_H_ */

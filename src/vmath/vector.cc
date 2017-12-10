@@ -1,5 +1,22 @@
+/*
+libvmath - a vector math library
+Copyright (C) 2004-2015 John Tsiombikas <nuclear@member.fsf.org>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "vector.h"
-#include "sphvec.h"
+#include "vmath.h"
 
 // ---------- Vector2 -----------
 
@@ -35,7 +52,7 @@ void Vector2::normalize()
 }
 
 Vector2 Vector2::normalized() const
-{	
+{
 	scalar_t len = length();
 	return Vector2(x / len, y / len);
 }
@@ -64,7 +81,7 @@ Vector2 Vector2::rotated(scalar_t angle) const
 {
 	return Vector2(cos(angle) * x - sin(angle) * y, sin(angle) * x + cos(angle) * y);
 }
-	
+
 Vector2 Vector2::reflection(const Vector2 &normal) const
 {
 	return 2.0 * dot_product(*this, normal) * normal - *this;
@@ -77,12 +94,13 @@ Vector2 Vector2::refraction(const Vector2 &normal, scalar_t src_ior, scalar_t ds
 	return Vector2(v3refr.x, v3refr.y);
 }
 
+/*
 std::ostream &operator <<(std::ostream &out, const Vector2 &vec)
 {
 	out << "[" << vec.x << " " << vec.y << "]";
 	return out;
 }
-
+*/
 
 
 // --------- Vector3 ----------
@@ -115,25 +133,12 @@ Vector3::Vector3(const Vector4 &vec)
 	z = vec.z;
 }
 
-Vector3::Vector3(const SphVector &sph)
-{
-	*this = sph;
-}
-
-Vector3 &Vector3::operator =(const SphVector &sph)
-{
-	x = sph.r * cos(sph.theta) * sin(sph.phi);
-	z = sph.r * sin(sph.theta) * sin(sph.phi);
-	y = sph.r * cos(sph.phi);
-	return *this;
-}
-
 void Vector3::normalize()
 {
 	scalar_t len = length();
 	x /= len;
 	y /= len;
-	z /= len;	
+	z /= len;
 }
 
 Vector3 Vector3::normalized() const
@@ -144,18 +149,22 @@ Vector3 Vector3::normalized() const
 
 Vector3 Vector3::reflection(const Vector3 &normal) const
 {
-	return -(2.0 * dot_product(*this, normal) * normal - *this);
+	return 2.0 * dot_product(*this, normal) * normal - *this;
 }
 
 Vector3 Vector3::refraction(const Vector3 &normal, scalar_t src_ior, scalar_t dst_ior) const
 {
+	return refraction(normal, src_ior / dst_ior);
+}
+
+Vector3 Vector3::refraction(const Vector3 &normal, scalar_t ior) const
+{
 	scalar_t cos_inc = dot_product(*this, -normal);
-	scalar_t ior = src_ior / dst_ior;
 
 	scalar_t radical = 1.0 + SQ(ior) * (SQ(cos_inc) - 1.0);
 
 	if(radical < 0.0) {		// total internal reflection
-		return reflection(normal);
+		return -reflection(normal);
 	}
 
 	scalar_t beta = ior * cos_inc - sqrt(radical);
@@ -227,13 +236,13 @@ Vector3 Vector3::rotated(const Vector3 &euler) const
 	return transformed(rot);
 }
 
-
+/*
 std::ostream &operator <<(std::ostream &out, const Vector3 &vec)
 {
 	out << "[" << vec.x << " " << vec.y << " " << vec.z << "]";
 	return out;
 }
-
+*/
 
 
 // -------------- Vector4 --------------
@@ -317,8 +326,10 @@ Vector4 Vector4::refraction(const Vector4 &normal, scalar_t src_ior, scalar_t ds
 	return *this;
 }
 
+/*
 std::ostream &operator <<(std::ostream &out, const Vector4 &vec)
 {
 	out << "[" << vec.x << " " << vec.y << " " << vec.z << " " << vec.w << "]";
 	return out;
 }
+*/

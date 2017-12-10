@@ -1,4 +1,23 @@
+/*
+libvmath - a vector math library
+Copyright (C) 2004-2015 John Tsiombikas <nuclear@member.fsf.org>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "vector.h"
+#include "matrix.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,16 +58,16 @@ static inline quat_t quat_inverse(quat_t q)
 
 static inline void quat_to_mat3(mat3_t res, quat_t q)
 {
-	m3_cons(res, 1.0 - 2.0 * q.y*q.y - 2.0 * q.z*q.z, 2.0 * q.x * q.y + 2.0 * q.w * q.z,   2.0 * q.z * q.x - 2.0 * q.w * q.y,
-				 2.0 * q.x * q.y - 2.0 * q.w * q.z,   1.0 - 2.0 * q.x*q.x - 2.0 * q.z*q.z, 2.0 * q.y * q.z + 2.0 * q.w * q.x,
-				 2.0 * q.z * q.x + 2.0 * q.w * q.y,   2.0 * q.y * q.z - 2.0 * q.w * q.x,   1.0 - 2.0 * q.x*q.x - 2.0 * q.y*q.y);
+	m3_cons(res, 1.0 - 2.0 * q.y*q.y - 2.0 * q.z*q.z, 2.0 * q.x * q.y - 2.0 * q.w * q.z,   2.0 * q.z * q.x + 2.0 * q.w * q.y,
+				 2.0 * q.x * q.y + 2.0 * q.w * q.z,   1.0 - 2.0 * q.x*q.x - 2.0 * q.z*q.z, 2.0 * q.y * q.z - 2.0 * q.w * q.x,
+				 2.0 * q.z * q.x - 2.0 * q.w * q.y,   2.0 * q.y * q.z + 2.0 * q.w * q.x,   1.0 - 2.0 * q.x*q.x - 2.0 * q.y*q.y);
 }
 
 static inline void quat_to_mat4(mat4_t res, quat_t q)
 {
-	m4_cons(res, 1.0 - 2.0 * q.y*q.y - 2.0 * q.z*q.z, 2.0 * q.x * q.y + 2.0 * q.w * q.z,   2.0 * q.z * q.x - 2.0 * q.w * q.y,   0,
-				 2.0 * q.x * q.y - 2.0 * q.w * q.z,   1.0 - 2.0 * q.x*q.x - 2.0 * q.z*q.z, 2.0 * q.y * q.z + 2.0 * q.w * q.x,   0,
-				 2.0 * q.z * q.x + 2.0 * q.w * q.y,   2.0 * q.y * q.z - 2.0 * q.w * q.x,   1.0 - 2.0 * q.x*q.x - 2.0 * q.y*q.y, 0,
+	m4_cons(res, 1.0 - 2.0 * q.y*q.y - 2.0 * q.z*q.z, 2.0 * q.x * q.y - 2.0 * q.w * q.z,   2.0 * q.z * q.x + 2.0 * q.w * q.y,   0,
+				 2.0 * q.x * q.y + 2.0 * q.w * q.z,   1.0 - 2.0 * q.x*q.x - 2.0 * q.z*q.z, 2.0 * q.y * q.z - 2.0 * q.w * q.x,   0,
+				 2.0 * q.z * q.x - 2.0 * q.w * q.y,   2.0 * q.y * q.z + 2.0 * q.w * q.x,   1.0 - 2.0 * q.x*q.x - 2.0 * q.y*q.y, 0,
 				 0, 0, 0, 1);
 }
 

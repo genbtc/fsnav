@@ -1,6 +1,84 @@
+/*
+libvmath - a vector math library
+Copyright (C) 2004-2015 John Tsiombikas <nuclear@member.fsf.org>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include <stdlib.h>
 #include <math.h>
 #include "vmath.h"
+
+#if defined(__APPLE__) && !defined(TARGET_IPHONE)
+#include <xmmintrin.h>
+
+void enable_fpexcept(void)
+{
+	unsigned int bits;
+	bits = _MM_MASK_INVALID | _MM_MASK_DIV_ZERO | _MM_MASK_OVERFLOW | _MM_MASK_UNDERFLOW;
+	_MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~bits);
+}
+
+void disable_fpexcept(void)
+{
+	unsigned int bits;
+	bits = _MM_MASK_INVALID | _MM_MASK_DIV_ZERO | _MM_MASK_OVERFLOW | _MM_MASK_UNDERFLOW;
+	_MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() | bits);
+}
+
+#elif defined(__GNUC__) && !defined(TARGET_IPHONE) && !defined(__MINGW32__)
+#define __USE_GNU
+#include <fenv.h>
+
+void enable_fpexcept(void)
+{
+	feenableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
+}
+
+void disable_fpexcept(void)
+{
+	fedisableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW);
+}
+
+#elif defined(_MSC_VER) || defined(__MINGW32__)
+#include <float.h>
+
+#if defined(__MINGW32__) && !defined(_EM_OVERFLOW)
+/* if gcc's float.h gets precedence, the mingw MSVC includes won't be declared */
+#define _MCW_EM			0x8001f
+#define _EM_INVALID		0x10
+#define _EM_ZERODIVIDE	0x08
+#define _EM_OVERFLOW	0x04
+unsigned int __cdecl _clearfp(void);
+unsigned int __cdecl _controlfp(unsigned int, unsigned int);
+#endif
+
+void enable_fpexcept(void)
+{
+	_clearfp();
+	_controlfp(_controlfp(0, 0) & ~(_EM_INVALID | _EM_ZERODIVIDE | _EM_OVERFLOW), _MCW_EM);
+}
+
+void disable_fpexcept(void)
+{
+	_clearfp();
+	_controlfp(_controlfp(0, 0) | (_EM_INVALID | _EM_ZERODIVIDE | _EM_OVERFLOW), _MCW_EM);
+}
+#else
+void enable_fpexcept(void) {}
+void disable_fpexcept(void) {}
+#endif
+
 
 /** Numerical calculation of integrals using simpson's rule */
 scalar_t integral(scalar_t (*f)(scalar_t), scalar_t low, scalar_t high, int samples)
@@ -8,7 +86,7 @@ scalar_t integral(scalar_t (*f)(scalar_t), scalar_t low, scalar_t high, int samp
 	int i;
 	scalar_t h = (high - low) / (scalar_t)samples;
 	scalar_t sum = 0.0;
-	
+
 	for(i=0; i<samples+1; i++) {
 		scalar_t y = f((scalar_t)i * h + low);
 		sum += ((!i || i == samples) ? y : ((i % 2) ? 4.0 * y : 2.0 * y)) * (h / 3.0);
@@ -36,13 +114,14 @@ scalar_t bspline(scalar_t a, scalar_t b, scalar_t c, scalar_t d, scalar_t t)
 		{-3,  0,  3,  0},
 		{1,  4,  1,  0}
 	};
-	
+
 	tmp = v4_scale(v4_transform(v4_cons(a, b, c, d), bspline_mat), 1.0 / 6.0);
 	return v4_dot(v4_cons(tsq * t, tsq, t, 1.0), tmp);
 }
 
 /** Catmull-rom spline interpolation */
-scalar_t catmull_rom_spline(scalar_t a, scalar_t b, scalar_t c, scalar_t d, scalar_t t) {
+scalar_t spline(scalar_t a, scalar_t b, scalar_t c, scalar_t d, scalar_t t)
+{
 	vec4_t tmp;
 	scalar_t tsq = t * t;
 
@@ -127,7 +206,7 @@ static void init_noise()
 	/* fill up the rest of the arrays by duplicating the existing gradients */
 	/* and permutations */
 	for(i=0; i<B+2; i++) {
-		perm[B + i] = perm[i];	
+		perm[B + i] = perm[i];
 		grad1[B + i] = grad1[i];
 		grad2[B + i] = grad2[i];
 		grad3[B + i] = grad3[i];
@@ -223,7 +302,7 @@ scalar_t noise3(scalar_t x, scalar_t y, scalar_t z)
 	sx = s_curve(rx0);
 	sy = s_curve(ry0);
 	sz = s_curve(rz0);
-	
+
 	/* interpolate along the top slice of the cell */
 	u = v3_dot(grad3[b00 + bz0], v3_cons(rx0, ry0, rz0));
 	v = v3_dot(grad3[b10 + bz0], v3_cons(rx1, ry0, rz0));

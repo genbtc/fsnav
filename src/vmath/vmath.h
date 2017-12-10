@@ -1,5 +1,23 @@
-#ifndef VMATH_H_
-#define VMATH_H_
+/*
+libvmath - a vector math library
+Copyright (C) 2004-2015 John Tsiombikas <nuclear@member.fsf.org>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef LIBVMATH_VMATH_H_
+#define LIBVMATH_VMATH_H_
 
 #include <math.h>
 #include "vmath_types.h"
@@ -17,10 +35,6 @@
 #define QUARTER_PI		0.785398163397448
 #define TWO_PI			6.283185307179586
 
-#define SMALL_NUMBER	1.e-4
-#define XSMALL_NUMBER	1.e-8
-#define ERROR_MARGIN	1.e-6
-
 
 #define RAD_TO_DEG(a) ((((scalar_t)a) * 360.0) / TWO_PI)
 #define DEG_TO_RAD(a) (((scalar_t)a) * (PI / 180.0))
@@ -30,13 +44,18 @@
 #define MIN(a, b)	((a) < (b) ? (a) : (b))
 #define MAX(a, b)	((a) > (b) ? (a) : (b))
 
-#ifndef __GNUC__
+#if (__STDC_VERSION__ < 199901L) && (__cplusplus < 201103L) && !defined(__GNUC__) && (_MSC_VER < 1800)
 #define round(x)	((x) >= 0 ? (x) + 0.5 : (x) - 0.5)
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif	/* __cplusplus */
+
+void enable_fpexcept(void);
+void disable_fpexcept(void);
+
+static inline scalar_t smoothstep(float a, float b, float x);
 
 static inline scalar_t frand(scalar_t range);
 static inline vec3_t sphrand(scalar_t rad);
@@ -47,7 +66,7 @@ scalar_t gaussian(scalar_t x, scalar_t mean, scalar_t sdev);
 static inline scalar_t lerp(scalar_t a, scalar_t b, scalar_t t);
 
 scalar_t bspline(scalar_t a, scalar_t b, scalar_t c, scalar_t d, scalar_t t);
-scalar_t catmull_rom_spline(scalar_t a, scalar_t b, scalar_t c, scalar_t d, scalar_t t);
+scalar_t spline(scalar_t a, scalar_t b, scalar_t c, scalar_t d, scalar_t t);
 scalar_t bezier(scalar_t a, scalar_t b, scalar_t c, scalar_t d, scalar_t t);
 
 scalar_t noise1(scalar_t x);
@@ -71,8 +90,7 @@ scalar_t turbulence3(scalar_t x, scalar_t y, scalar_t z, int octaves);
 #include "vector.h"
 #include "matrix.h"
 #include "quat.h"
-#include "sphvec.h"
 #include "ray.h"
-#include "curves.h"
+#include "geom.h"
 
-#endif	/* VMATH_H_ */
+#endif	/* LIBVMATH_VMATH_H_ */

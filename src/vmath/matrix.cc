@@ -1,3 +1,20 @@
+/*
+libvmath - a vector math library
+Copyright (C) 2004-2015 John Tsiombikas <nuclear@member.fsf.org>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include <cstdio>
 #include <cmath>
 #include "matrix.h"
@@ -12,7 +29,7 @@ Matrix3x3 Matrix3x3::identity = Matrix3x3(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 Matrix3x3::Matrix3x3()
 {
-	*this = identity;
+	*this = Matrix3x3(1, 0, 0, 0, 1, 0, 0, 0, 1);
 }
 
 Matrix3x3::Matrix3x3(	scalar_t m11, scalar_t m12, scalar_t m13,
@@ -22,6 +39,13 @@ Matrix3x3::Matrix3x3(	scalar_t m11, scalar_t m12, scalar_t m13,
 	m[0][0] = m11; m[0][1] = m12; m[0][2] = m13;
 	m[1][0] = m21; m[1][1] = m22; m[1][2] = m23;
 	m[2][0] = m31; m[2][1] = m32; m[2][2] = m33;
+}
+
+Matrix3x3::Matrix3x3(const Vector3 &ivec, const Vector3 &jvec, const Vector3 &kvec)
+{
+	set_row_vector(ivec, 0);
+	set_row_vector(jvec, 1);
+	set_row_vector(kvec, 2);
 }
 
 Matrix3x3::Matrix3x3(const mat3_t cmat)
@@ -43,7 +67,7 @@ Matrix3x3 operator +(const Matrix3x3 &m1, const Matrix3x3 &m2)
 	Matrix3x3 res;
 	const scalar_t *op1 = m1.m[0], *op2 = m2.m[0];
 	scalar_t *dest = res.m[0];
-	
+
 	for(int i=0; i<9; i++) {
 		*dest++ = *op1++ + *op2++;
 	}
@@ -55,7 +79,7 @@ Matrix3x3 operator -(const Matrix3x3 &m1, const Matrix3x3 &m2)
 	Matrix3x3 res;
 	const scalar_t *op1 = m1.m[0], *op2 = m2.m[0];
 	scalar_t *dest = res.m[0];
-	
+
 	for(int i=0; i<9; i++) {
 		*dest++ = *op1++ - *op2++;
 	}
@@ -77,7 +101,7 @@ void operator +=(Matrix3x3 &m1, const Matrix3x3 &m2)
 {
 	scalar_t *op1 = m1.m[0];
 	const scalar_t *op2 = m2.m[0];
-	
+
 	for(int i=0; i<9; i++) {
 		*op1++ += *op2++;
 	}
@@ -87,7 +111,7 @@ void operator -=(Matrix3x3 &m1, const Matrix3x3 &m2)
 {
 	scalar_t *op1 = m1.m[0];
 	const scalar_t *op2 = m2.m[0];
-	
+
 	for(int i=0; i<9; i++) {
 		*op1++ -= *op2++;
 	}
@@ -109,7 +133,7 @@ Matrix3x3 operator *(const Matrix3x3 &mat, scalar_t scalar)
 	Matrix3x3 res;
 	const scalar_t *mptr = mat.m[0];
 	scalar_t *dptr = res.m[0];
-	
+
 	for(int i=0; i<9; i++) {
 		*dptr++ = *mptr++ * scalar;
 	}
@@ -121,7 +145,7 @@ Matrix3x3 operator *(scalar_t scalar, const Matrix3x3 &mat)
 	Matrix3x3 res;
 	const scalar_t *mptr = mat.m[0];
 	scalar_t *dptr = res.m[0];
-	
+
 	for(int i=0; i<9; i++) {
 		*dptr++ = *mptr++ * scalar;
 	}
@@ -131,7 +155,7 @@ Matrix3x3 operator *(scalar_t scalar, const Matrix3x3 &mat)
 void operator *=(Matrix3x3 &mat, scalar_t scalar)
 {
 	scalar_t *mptr = mat.m[0];
-	
+
 	for(int i=0; i<9; i++) {
 		*mptr++ *= scalar;
 	}
@@ -152,8 +176,8 @@ void Matrix3x3::rotate(scalar_t angle)
 {
 	scalar_t cos_a = cos(angle);
 	scalar_t sin_a = sin(angle);
-	Matrix3x3 rmat(	cos_a, 	-sin_a, 	0,
-					sin_a, 	cos_a, 		0,
+	Matrix3x3 rmat(	cos_a,	-sin_a,		0,
+					sin_a,	cos_a,		0,
 					0,		0,			1);
 	*this *= rmat;
 }
@@ -168,38 +192,38 @@ void Matrix3x3::set_rotation(scalar_t angle)
 void Matrix3x3::rotate(const Vector3 &euler_angles)
 {
 	Matrix3x3 xrot, yrot, zrot;
-	
+
 	xrot = Matrix3x3(	1,			0,					0,
 						0,	cos(euler_angles.x),	-sin(euler_angles.x),
 						0,	sin(euler_angles.x),	cos(euler_angles.x));
-	
+
 	yrot = Matrix3x3(	cos(euler_angles.y),	0,	sin(euler_angles.y),
 								0,				1,				0,
 						-sin(euler_angles.y),	0,	cos(euler_angles.y));
-	
+
 	zrot = Matrix3x3(	cos(euler_angles.z),	-sin(euler_angles.z),	0,
 						sin(euler_angles.z),	cos(euler_angles.z),	0,
 								0,						0,				1);
-	
+
 	*this *= xrot * yrot * zrot;
 }
 
 void Matrix3x3::set_rotation(const Vector3 &euler_angles)
 {
 	Matrix3x3 xrot, yrot, zrot;
-	
+
 	xrot = Matrix3x3(	1,			0,					0,
 						0,	cos(euler_angles.x),	-sin(euler_angles.x),
 						0,	sin(euler_angles.x),	cos(euler_angles.x));
-	
+
 	yrot = Matrix3x3(	cos(euler_angles.y),	0,	sin(euler_angles.y),
 								0,				1,				0,
 						-sin(euler_angles.y),	0,	cos(euler_angles.y));
-	
+
 	zrot = Matrix3x3(	cos(euler_angles.z),	-sin(euler_angles.z),	0,
 						sin(euler_angles.z),	cos(euler_angles.z),	0,
 								0,						0,				1);
-	
+
 	*this = xrot * yrot * zrot;
 }
 
@@ -216,9 +240,11 @@ void Matrix3x3::rotate(const Vector3 &axis, scalar_t angle)
 	xform.m[0][0] = nxsq + (1-nxsq) * cosa;
 	xform.m[0][1] = axis.x * axis.y * invcosa - axis.z * sina;
 	xform.m[0][2] = axis.x * axis.z * invcosa + axis.y * sina;
+
 	xform.m[1][0] = axis.x * axis.y * invcosa + axis.z * sina;
 	xform.m[1][1] = nysq + (1-nysq) * cosa;
 	xform.m[1][2] = axis.y * axis.z * invcosa - axis.x * sina;
+
 	xform.m[2][0] = axis.x * axis.z * invcosa - axis.y * sina;
 	xform.m[2][1] = axis.y * axis.z * invcosa + axis.x * sina;
 	xform.m[2][2] = nzsq + (1-nzsq) * cosa;
@@ -245,6 +271,48 @@ void Matrix3x3::set_rotation(const Vector3 &axis, scalar_t angle)
 	m[2][0] = axis.x * axis.z * invcosa - axis.y * sina;
 	m[2][1] = axis.y * axis.z * invcosa + axis.x * sina;
 	m[2][2] = nzsq + (1-nzsq) * cosa;
+}
+
+// Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
+// article "Quaternion Calculus and Fast Animation".
+// adapted from: http://www.geometrictools.com/LibMathematics/Algebra/Wm5Quaternion.inl
+Quaternion Matrix3x3::get_rotation_quat() const
+{
+	static const int next[3] = {1, 2, 0};
+
+	float quat[4];
+
+	scalar_t trace = m[0][0] + m[1][1] + m[2][2];
+	scalar_t root;
+
+	if(trace > 0.0f) {
+		// |w| > 1/2
+		root = sqrt(trace + 1.0f);	// 2w
+		quat[0] = 0.5f * root;
+		root = 0.5f / root;	// 1 / 4w
+		quat[1] = (m[2][1] - m[1][2]) * root;
+		quat[2] = (m[0][2] - m[2][0]) * root;
+		quat[3] = (m[1][0] - m[0][1]) * root;
+	} else {
+		// |w| <= 1/2
+		int i = 0;
+		if(m[1][1] > m[0][0]) {
+			i = 1;
+		}
+		if(m[2][2] > m[i][i]) {
+			i = 2;
+		}
+		int j = next[i];
+		int k = next[j];
+
+		root = sqrt(m[i][i] - m[j][j] - m[k][k] + 1.0f);
+		quat[i + 1] = 0.5f * root;
+		root = 0.5f / root;
+		quat[0] = (m[k][j] - m[j][k]) * root;
+		quat[j + 1] = (m[j][i] - m[i][j]) * root;
+		quat[k + 1] = (m[k][i] - m[i][k]) * root;
+	}
+	return Quaternion(quat[0], quat[1], quat[2], quat[3]);
 }
 
 void Matrix3x3::scale(const Vector3 &scale_vec)
@@ -309,7 +377,7 @@ Matrix3x3 Matrix3x3::transposed() const
 
 scalar_t Matrix3x3::determinant() const
 {
-	return 	m[0][0] * (m[1][1]*m[2][2] - m[1][2]*m[2][1]) -
+	return	m[0][0] * (m[1][1]*m[2][2] - m[1][2]*m[2][1]) -
 			m[0][1] * (m[1][0]*m[2][2] - m[1][2]*m[2][0]) +
 			m[0][2] * (m[1][0]*m[2][1] - m[1][1]*m[2][0]);
 }
@@ -320,7 +388,7 @@ Matrix3x3 Matrix3x3::inverse() const
 	return *this;
 }
 
-ostream &operator <<(ostream &out, const Matrix3x3 &mat)
+/*ostream &operator <<(ostream &out, const Matrix3x3 &mat)
 {
 	for(int i=0; i<3; i++) {
 		char str[100];
@@ -328,7 +396,7 @@ ostream &operator <<(ostream &out, const Matrix3x3 &mat)
 		out << str;
 	}
 	return out;
-}
+}*/
 
 
 
@@ -338,7 +406,7 @@ Matrix4x4 Matrix4x4::identity = Matrix4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
 
 Matrix4x4::Matrix4x4()
 {
-	*this = identity;
+	*this = Matrix4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 }
 
 Matrix4x4::Matrix4x4(	scalar_t m11, scalar_t m12, scalar_t m13, scalar_t m14,
@@ -372,7 +440,7 @@ Matrix4x4 operator +(const Matrix4x4 &m1, const Matrix4x4 &m2)
 	Matrix4x4 res;
 	const scalar_t *op1 = m1.m[0], *op2 = m2.m[0];
 	scalar_t *dest = res.m[0];
-	
+
 	for(int i=0; i<16; i++) {
 		*dest++ = *op1++ + *op2++;
 	}
@@ -384,32 +452,18 @@ Matrix4x4 operator -(const Matrix4x4 &m1, const Matrix4x4 &m2)
 	Matrix4x4 res;
 	const scalar_t *op1 = m1.m[0], *op2 = m2.m[0];
 	scalar_t *dest = res.m[0];
-	
+
 	for(int i=0; i<16; i++) {
 		*dest++ = *op1++ - *op2++;
 	}
 	return res;
 }
 
-/*
-Matrix4x4 operator *(const Matrix4x4 &m1, const Matrix4x4 &m2) {
-	Matrix4x4 res;
-	
-	for(int i=0; i<4; i++) {
-		for(int j=0; j<4; j++) {
-			res.m[i][j] = m1.m[i][0] * m2.m[0][j] + m1.m[i][1] * m2.m[1][j] + m1.m[i][2] * m2.m[2][j] + m1.m[i][3] * m2.m[3][j];
-		}
-	}
-
-	return res;
-}
-*/
-
 void operator +=(Matrix4x4 &m1, const Matrix4x4 &m2)
 {
 	scalar_t *op1 = m1.m[0];
 	const scalar_t *op2 = m2.m[0];
-	
+
 	for(int i=0; i<16; i++) {
 		*op1++ += *op2++;
 	}
@@ -419,21 +473,10 @@ void operator -=(Matrix4x4 &m1, const Matrix4x4 &m2)
 {
 	scalar_t *op1 = m1.m[0];
 	const scalar_t *op2 = m2.m[0];
-	
+
 	for(int i=0; i<16; i++) {
 		*op1++ -= *op2++;
 	}
-}
-
-void operator *=(Matrix4x4 &m1, const Matrix4x4 &m2)
-{
-	Matrix4x4 res;
-	for(int i=0; i<4; i++) {
-		for(int j=0; j<4; j++) {
-			res.m[i][j] = m1.m[i][0] * m2.m[0][j] + m1.m[i][1] * m2.m[1][j] + m1.m[i][2] * m2.m[2][j] + m1.m[i][3] * m2.m[3][j];
-		}
-	}
-	memcpy(m1.m, res.m, 16 * sizeof(scalar_t));
 }
 
 Matrix4x4 operator *(const Matrix4x4 &mat, scalar_t scalar)
@@ -441,7 +484,7 @@ Matrix4x4 operator *(const Matrix4x4 &mat, scalar_t scalar)
 	Matrix4x4 res;
 	const scalar_t *mptr = mat.m[0];
 	scalar_t *dptr = res.m[0];
-	
+
 	for(int i=0; i<16; i++) {
 		*dptr++ = *mptr++ * scalar;
 	}
@@ -453,7 +496,7 @@ Matrix4x4 operator *(scalar_t scalar, const Matrix4x4 &mat)
 	Matrix4x4 res;
 	const scalar_t *mptr = mat.m[0];
 	scalar_t *dptr = res.m[0];
-	
+
 	for(int i=0; i<16; i++) {
 		*dptr++ = *mptr++ * scalar;
 	}
@@ -463,7 +506,7 @@ Matrix4x4 operator *(scalar_t scalar, const Matrix4x4 &mat)
 void operator *=(Matrix4x4 &mat, scalar_t scalar)
 {
 	scalar_t *mptr = mat.m[0];
-	
+
 	for(int i=0; i<16; i++) {
 		*mptr++ *= scalar;
 	}
@@ -480,41 +523,46 @@ void Matrix4x4::set_translation(const Vector3 &trans)
 	*this = Matrix4x4(1, 0, 0, trans.x, 0, 1, 0, trans.y, 0, 0, 1, trans.z, 0, 0, 0, 1);
 }
 
+Vector3 Matrix4x4::get_translation() const
+{
+	return Vector3(m[0][3], m[1][3], m[2][3]);
+}
+
 void Matrix4x4::rotate(const Vector3 &euler_angles)
 {
 	Matrix3x3 xrot, yrot, zrot;
-	
+
 	xrot = Matrix3x3(	1,			0,					0,
 						0,	cos(euler_angles.x),	-sin(euler_angles.x),
 						0,	sin(euler_angles.x),	cos(euler_angles.x));
-	
+
 	yrot = Matrix3x3(	cos(euler_angles.y),	0,	sin(euler_angles.y),
 								0,				1,				0,
 						-sin(euler_angles.y),	0,	cos(euler_angles.y));
-	
+
 	zrot = Matrix3x3(	cos(euler_angles.z),	-sin(euler_angles.z),	0,
 						sin(euler_angles.z),	cos(euler_angles.z),	0,
 								0,						0,				1);
-	
+
 	*this *= Matrix4x4(xrot * yrot * zrot);
 }
 
 void Matrix4x4::set_rotation(const Vector3 &euler_angles)
 {
 	Matrix3x3 xrot, yrot, zrot;
-	
+
 	xrot = Matrix3x3(	1,			0,					0,
 						0,	cos(euler_angles.x),	-sin(euler_angles.x),
 						0,	sin(euler_angles.x),	cos(euler_angles.x));
-	
+
 	yrot = Matrix3x3(	cos(euler_angles.y),	0,	sin(euler_angles.y),
 								0,				1,				0,
 						-sin(euler_angles.y),	0,	cos(euler_angles.y));
-	
+
 	zrot = Matrix3x3(	cos(euler_angles.z),	-sin(euler_angles.z),	0,
 						sin(euler_angles.z),	cos(euler_angles.z),	0,
 								0,						0,				1);
-	
+
 	*this = Matrix4x4(xrot * yrot * zrot);
 }
 
@@ -527,7 +575,7 @@ void Matrix4x4::rotate(const Vector3 &axis, scalar_t angle)
 	scalar_t nysq = axis.y * axis.y;
 	scalar_t nzsq = axis.z * axis.z;
 
-	Matrix3x3 xform;
+	Matrix4x4 xform;
 	xform[0][0] = nxsq + (1-nxsq) * cosa;
 	xform[0][1] = axis.x * axis.y * invcosa - axis.z * sina;
 	xform[0][2] = axis.x * axis.z * invcosa + axis.y * sina;
@@ -538,7 +586,7 @@ void Matrix4x4::rotate(const Vector3 &axis, scalar_t angle)
 	xform[2][1] = axis.y * axis.z * invcosa + axis.x * sina;
 	xform[2][2] = nzsq + (1-nzsq) * cosa;
 
-	*this *= Matrix4x4(xform);
+	*this *= xform;
 }
 
 void Matrix4x4::set_rotation(const Vector3 &axis, scalar_t angle)
@@ -562,6 +610,22 @@ void Matrix4x4::set_rotation(const Vector3 &axis, scalar_t angle)
 	m[2][2] = nzsq + (1-nzsq) * cosa;
 }
 
+void Matrix4x4::rotate(const Quaternion &quat)
+{
+	*this *= quat.get_rotation_matrix();
+}
+
+void Matrix4x4::set_rotation(const Quaternion &quat)
+{
+	*this = quat.get_rotation_matrix();
+}
+
+Quaternion Matrix4x4::get_rotation_quat() const
+{
+	Matrix3x3 mat3 = *this;
+	return mat3.get_rotation_quat();
+}
+
 void Matrix4x4::scale(const Vector4 &scale_vec)
 {
 	Matrix4x4 smat(	scale_vec.x, 0, 0, 0,
@@ -577,6 +641,78 @@ void Matrix4x4::set_scaling(const Vector4 &scale_vec)
 						0, scale_vec.y, 0, 0,
 						0, 0, scale_vec.z, 0,
 						0, 0, 0, scale_vec.w);
+}
+
+Vector3 Matrix4x4::get_scaling() const
+{
+	Vector3 vi = get_row_vector(0);
+	Vector3 vj = get_row_vector(1);
+	Vector3 vk = get_row_vector(2);
+
+	return Vector3(vi.length(), vj.length(), vk.length());
+}
+
+void Matrix4x4::set_frustum(float left, float right, float bottom, float top, float znear, float zfar)
+{
+	float dx = right - left;
+	float dy = top - bottom;
+	float dz = zfar - znear;
+
+	float a = (right + left) / dx;
+	float b = (top + bottom) / dy;
+	float c = -(zfar + znear) / dz;
+	float d = -2.0 * zfar * znear / dz;
+
+	*this = Matrix4x4(2.0 * znear / dx, 0, a, 0,
+			0, 2.0 * znear / dy, b, 0,
+			0, 0, c, d,
+			0, 0, -1, 0);
+}
+
+void Matrix4x4::set_perspective(float vfov, float aspect, float znear, float zfar)
+{
+	float f = 1.0f / tan(vfov * 0.5f);
+    float dz = znear - zfar;
+
+	reset_identity();
+
+	m[0][0] = f / aspect;
+    m[1][1] = f;
+    m[2][2] = (zfar + znear) / dz;
+    m[3][2] = -1.0f;
+    m[2][3] = 2.0f * zfar * znear / dz;
+    m[3][3] = 0.0f;
+}
+
+void Matrix4x4::set_orthographic(float left, float right, float bottom, float top, float znear, float zfar)
+{
+	float dx = right - left;
+	float dy = top - bottom;
+	float dz = zfar - znear;
+
+	reset_identity();
+
+	m[0][0] = 2.0 / dx;
+	m[1][1] = 2.0 / dy;
+	m[2][2] = -2.0 / dz;
+	m[0][3] = -(right + left) / dx;
+	m[1][3] = -(top + bottom) / dy;
+	m[2][3] = -(zfar + znear) / dz;
+}
+
+void Matrix4x4::set_lookat(const Vector3 &pos, const Vector3 &targ, const Vector3 &up)
+{
+	Vector3 vk = (targ - pos).normalized();
+	Vector3 vj = up.normalized();
+	Vector3 vi = cross_product(vk, vj).normalized();
+	vj = cross_product(vi, vk);
+
+	*this = Matrix4x4(
+			vi.x, vi.y, vi.z, 0,
+			vj.x, vj.y, vj.z, 0,
+			-vk.x, -vk.y, -vk.z, 0,
+			0, 0, 0, 1);
+	translate(-pos);
 }
 
 void Matrix4x4::set_column_vector(const Vector4 &vec, unsigned int col_index)
@@ -718,11 +854,12 @@ Matrix4x4 Matrix4x4::adjoint() const
 
 Matrix4x4 Matrix4x4::inverse() const
 {
-	Matrix4x4 AdjMat = adjoint();
+	Matrix4x4 adj = adjoint();
 
-	return AdjMat * (1.0f / determinant());
+	return adj * (1.0f / determinant());
 }
 
+/*
 ostream &operator <<(ostream &out, const Matrix4x4 &mat)
 {
 	for(int i=0; i<4; i++) {
@@ -732,3 +869,4 @@ ostream &operator <<(ostream &out, const Matrix4x4 &mat)
 	}
 	return out;
 }
+*/
