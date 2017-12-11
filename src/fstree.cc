@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <float.h>
 #include <assert.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -11,14 +10,13 @@
 #include "vis.h"
 #include "text.h"
 
-using namespace std;
-
 static Vector2 calc_dir_size(int num_files);
-
-
 static float params[NUM_LAYOUT_PARAMS];
 static FSNode *selnode;
 
+#ifndef PATH_MAX
+#define PATH_MAX	1024
+#endif
 
 void set_layout_param(LayoutParameter which, float val)
 {
@@ -34,10 +32,6 @@ FSNode *get_selection()
 {
 	return selnode;
 }
-
-#ifndef PATH_MAX
-#define PATH_MAX	1024
-#endif
 
 bool build_tree(Dir *tree, const char *dirname)
 {

@@ -30,7 +30,7 @@ set(LIBRARIES_FROM_REFERENCES "${GLUT_LIBRARIES};${OPENGL_gl_LIBRARY};${OPENGL_g
 add_subdirectory(VMath)
 add_subdirectory(Imago)
 #Prepare EXE - by listing all source files, and the Resource.rc (icon)
-set(SOURCE_FILES "fsnav.cc;fstree.cc;colorman.cc;vis.cc;stereo.c;text.c")
+set(SOURCE_FILES "main.cpp;fsnav.cc;fstree.cc;vis.cc;stereo.c;text.c")
 if(WIN32)
 	add_executable(FSNav WIN32 ${SOURCE_FILES})
 else()

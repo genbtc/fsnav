@@ -16,7 +16,11 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ]
         },
         {
             "name": "Linux",
@@ -66,17 +70,14 @@
             }
         },
         {
-            "name": "Win32",
+            "name": "MingW64",
             "includePath": [
-                "C:/Software/msys32/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include",
-                "C:/Software/msys32/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include/ssp",
-                "C:/Software/msys32/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include/ssp",
-                "C:/Software/msys32/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include-fixed",
-                "C:/Software/msys32/mingw32/include",
-                "C:/Software/msys32/mingw32/i686-w64-mingw32/include",
-
-                "${workspaceRoot}/vmath",
-                "${workspaceRoot}/image"
+                "${workspaceRoot}",
+                "C:/Software/msys64/mingw64/include",
+                "C:/Software/msys64/mingw64/x86_64-w64-mingw32/include",
+                "C:/Software/msys64/mingw64/include/c++/7.2.0",
+                "C:/Software/msys64/mingw64/include/c++/7.2.0/x86_64-w64-mingw32",
+                "C:/Software/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/7.2.0/include"
             ],
             "defines": [
                 "_DEBUG",
@@ -85,19 +86,20 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "C:/Software/msys32/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include",
-                    "C:/Software/msys32/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include-fixed",
-                    "C:/Software/msys32/mingw32/include/*",
-                    "C:/Software/msys32/mingw32/i686-w64-mingw32/include/*",
-                    "C:/Software/msys32/mingw32/i686-w64-mingw32/lib/",
+                    "C:/Software/msys64/mingw64/include",
+                    "C:/Software/msys64/mingw64/x86_64-w64-mingw32/include",
+                    "C:/Software/msys64/mingw64/include/c++/7.2.0",
+                    "C:/Software/msys64/mingw64/include/c++/7.2.0/x86_64-w64-mingw32",
+                    "C:/Software/msys64/mingw64/lib/gcc/x86_64-w64-mingw32/7.2.0/include",
+                    "C:/Software/msys64/mingw64/include/c++/7.2.0/tr1",
+                    "${workspaceRoot}/*",
                     "${workspaceRoot}/vmath/*",
-                    "${workspaceRoot}/imago/*",
-                    "${workspaceRoot}"
+                    "${workspaceRoot}/imago/*"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             }
         }
     ],
-    "version": 2
+    "version": 3
 }
